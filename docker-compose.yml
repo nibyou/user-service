@@ -1,0 +1,62 @@
+version: '3.7'
+
+networks:
+  my-net:
+    external: true
+
+volumes:
+  psql_storage:
+    external: true
+  nginx_secrets:
+    external: true
+
+services:
+
+  postgres:
+    image: postgres:13.3-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=keycloak
+    networks:
+      - my-net
+    ports:
+      - '5437:5432'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - psql_storage:/var/lib/postgresql/data
+
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nodejs
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - my-net
+    ports:
+      - '3000:3000'
+    volumes:
+      -
+
+  webserver:
+    image: jonasal/nginx-certbot:latest
+    container_name: webserver
+    networks:
+      - my-net
+    environment:
+      CERTBOT_EMAIL: YOUR_EMAIL
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./user_conf.d:/etc/nginx/user_conf.d
+      - nginx_secrets:/etc/letsencrypt
+    depends_on:
+      - keycloak
