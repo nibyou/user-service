@@ -14,6 +14,7 @@ import {
   OnboardingToken,
   OnboardingTokenDocument,
 } from '../onboarding-token/schemata/onboarding-token.schema';
+import { AccountType } from '../onboarding-token/dto/create-onboarding-token.dto';
 
 @Injectable()
 export class UsersService {
@@ -41,8 +42,10 @@ export class UsersService {
       throw new HttpException('User already exists', HttpStatus.CONFLICT);
     }
 
+    let onboardingToken: OnboardingTokenDocument;
+
     try {
-      const onboardingToken = await this.onboardingTokenModel.findOne({
+      onboardingToken = await this.onboardingTokenModel.findOne({
         ...filterInactive,
         _id: createUserRegisterDto.onboardingToken,
         email: createUserRegisterDto.email,
@@ -68,7 +71,7 @@ export class UsersService {
     const userReturn = await newUser.save();
     const id = userReturn._id;
 
-    const kcResponse = await this.kcAdminClient.users.create({
+    const userRep = {
       username: createUserRegisterDto.email,
       email: createUserRegisterDto.email,
       credentials: [
@@ -84,7 +87,16 @@ export class UsersService {
       firstName: createUserRegisterDto.firstName,
       lastName: createUserRegisterDto.lastName,
       realm: process.env.KEYCLOAK_REALM,
-    });
+      realmRoles: [],
+    };
+
+    if (onboardingToken.accountType === AccountType.PATIENT) {
+      userRep.realmRoles.push('user_patient');
+    } else if (onboardingToken.accountType === AccountType.PRACTITIONER) {
+      userRep.realmRoles.push('user_practitioner');
+    }
+
+    const kcResponse = await this.kcAdminClient.users.create(userRep);
     console.log(kcResponse);
 
     await this.userModel.updateOne(
@@ -96,6 +108,7 @@ export class UsersService {
       },
     );
 
+    userReturn.keycloakId = kcResponse.id;
     return userReturn;
   }
 
@@ -119,7 +132,7 @@ export class UsersService {
 
       console.log('Created user', userReturn, id);
 
-      const kcResponse = await this.kcAdminClient.users.create({
+      const userRep = {
         username: createUserDto.email,
         email: createUserDto.email,
         credentials: [
@@ -135,7 +148,16 @@ export class UsersService {
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastName,
         realm: process.env.KEYCLOAK_REALM,
-      });
+        realmRoles: [],
+      };
+
+      if (createUserDto.accountType === AccountType.PATIENT) {
+        userRep.realmRoles.push('user_patient');
+      } else if (createUserDto.accountType === AccountType.PRACTITIONER) {
+        userRep.realmRoles.push('user_practitioner');
+      }
+
+      const kcResponse = await this.kcAdminClient.users.create(userRep);
       console.log(kcResponse);
 
       await this.userModel.updateOne(
@@ -146,6 +168,7 @@ export class UsersService {
           },
         },
       );
+      userReturn.keycloakId = kcResponse.id;
       return userReturn;
     }
   }

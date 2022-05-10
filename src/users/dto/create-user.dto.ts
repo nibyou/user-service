@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AccountType } from '../../onboarding-token/dto/create-onboarding-token.dto';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -12,6 +13,9 @@ export class CreateUserDto {
 
   @ApiProperty()
   lastName: string;
+
+  @ApiPropertyOptional({ enum: AccountType })
+  accountType?: AccountType;
 }
 
 export class CreateUserRegisterDto {

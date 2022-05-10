@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { GlobalStatus } from '@nibyou/types';
+import { AccountType } from '../dto/create-onboarding-token.dto';
 
 export type OnboardingTokenDocument = OnboardingToken & Document;
 
@@ -19,9 +20,9 @@ export class OnboardingToken {
   @ApiProperty()
   validUntil: Date;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: () => AccountType })
   @ApiProperty()
-  accountType: string;
+  accountType: AccountType;
 }
 
 export const OnboardingTokenSchema =
