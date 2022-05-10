@@ -9,4 +9,5 @@ RUN yarn install --immutable --immutable-cache
 
 COPY . .
 
-CMD ["npm", "start"]
+CMD ["yarn", "build"]
+CMD ["yarn", "start:prod"]
