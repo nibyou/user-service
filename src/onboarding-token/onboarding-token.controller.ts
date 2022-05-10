@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  HttpCode,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, } from '@nestjs/common';
 import { OnboardingTokenService } from './onboarding-token.service';
 import { CreateOnboardingTokenDto } from './dto/create-onboarding-token.dto';
 import { UpdateOnboardingTokenDto } from './dto/update-onboarding-token.dto';
@@ -30,7 +21,7 @@ export class OnboardingTokenController {
     type: OnboardingToken,
   })
   @HttpCode(201)
-  @Roles({ roles: [RealmRoles.ADMIN] })
+  @Roles({ roles: [RealmRoles.ADMIN, RealmRoles.USER_PRACTITIONER] })
   create(
     @Body() createOnboardingTokenDto: CreateOnboardingTokenDto,
     @AuthenticatedUser() user: AuthUser,

@@ -1,5 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateOnboardingTokenDto } from './dto/create-onboarding-token.dto';
+import {
+  AccountType,
+  CreateOnboardingTokenDto,
+} from './dto/create-onboarding-token.dto';
 import { UpdateOnboardingTokenDto } from './dto/update-onboarding-token.dto';
 import {
   OnboardingToken,
@@ -21,12 +24,16 @@ export class OnboardingTokenService {
     createOnboardingTokenDto: CreateOnboardingTokenDto,
     user: AuthUser,
   ): Promise<OnboardingToken> {
-    if (AuthUser.isAdmin(user)) {
-      const onboardingToken = new this.onboardingTokenModel(
-        createOnboardingTokenDto,
-      );
-      return onboardingToken.save();
+    if (!AuthUser.isAdmin(user)) {
+      createOnboardingTokenDto.accountType = AccountType.PATIENT; // ignore account type if not admin
     }
+
+    const onboardingToken = new this.onboardingTokenModel(
+      createOnboardingTokenDto,
+    );
+
+    // TODO: send email with token
+    return onboardingToken.save();
   }
 
   async findAll(user: AuthUser): Promise<OnboardingToken[]> {

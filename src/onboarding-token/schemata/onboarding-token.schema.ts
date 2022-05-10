@@ -18,6 +18,10 @@ export class OnboardingToken {
   @Prop({ required: true })
   @ApiProperty()
   validUntil: Date;
+
+  @Prop({ required: true })
+  @ApiProperty()
+  accountType: string;
 }
 
 export const OnboardingTokenSchema =

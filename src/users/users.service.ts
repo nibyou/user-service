@@ -86,6 +86,16 @@ export class UsersService {
       realm: process.env.KEYCLOAK_REALM,
     });
     console.log(kcResponse);
+
+    await this.userModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          keycloakId: kcResponse.id,
+        },
+      },
+    );
+
     return userReturn;
   }
 
@@ -127,6 +137,15 @@ export class UsersService {
         realm: process.env.KEYCLOAK_REALM,
       });
       console.log(kcResponse);
+
+      await this.userModel.updateOne(
+        { _id: id },
+        {
+          $set: {
+            keycloakId: kcResponse.id,
+          },
+        },
+      );
       return userReturn;
     }
   }
@@ -156,10 +175,21 @@ export class UsersService {
 
   async markDeleted(id: string, user: AuthUser) {
     if (AuthUser.isAdmin(user)) {
-      await this.userModel.updateOne(
+      const userToDelete = await this.userModel.findOneAndUpdate(
         { _id: id, ...filterDeleted },
         { status: GlobalStatus.DELETED },
       );
+
+      await this.kcAdminClient.users.update(
+        {
+          realm: process.env.KEYCLOAK_REALM,
+          id: userToDelete.keycloakId,
+        },
+        {
+          enabled: false,
+        },
+      );
+
       return new JsonResponse().setMessage('User deleted');
     }
   }
@@ -171,6 +201,7 @@ export class UsersService {
 
     const allUsers = await this.kcAdminClient.users.find({
       realm: process.env.KEYCLOAK_REALM,
+      email,
     });
 
     const userExistsKeycloak = allUsers.find((u) => u.email === email);

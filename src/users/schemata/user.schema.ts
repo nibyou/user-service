@@ -34,6 +34,10 @@ export class User {
   @Prop({ type: () => GlobalStatus, default: GlobalStatus.ACTIVE })
   @ApiProperty()
   status: GlobalStatus;
+
+  @Prop()
+  @ApiProperty()
+  keycloakId: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
