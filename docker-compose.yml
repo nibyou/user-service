@@ -1,39 +1,27 @@
-version: '3.7'
-
 networks:
   my-net:
     external: true
 
-volumes:
-  nginx_secrets:
-    external: true
-
 services:
+  caddy:
+    image: caddy:2.4.3-alpine
+    restart: unless-stopped
+    command: caddy reverse-proxy --from ${CADDY_FROM_URL} --to http://node:3000
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - caddy:/data
+    networks:
+      - my-net
+
   node:
+    container_name: node
     build:
       context: .
       dockerfile: Dockerfile
-    image: nodejs
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
     networks:
       - my-net
     ports:
       - '3000:3000'
-
-  webserver:
-    image: jonasal/nginx-certbot:latest
-    container_name: webserver
-    networks:
-      - my-net
-    environment:
-      CERTBOT_EMAIL: YOUR_EMAIL
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./user_conf.d:/etc/nginx/user_conf.d
-      - nginx_secrets:/etc/letsencrypt
-    depends_on:
-      - node
+    tty: true
