@@ -9,5 +9,6 @@ RUN yarn install --immutable --immutable-cache
 
 COPY . .
 
-CMD ["yarn", "build"]
-CMD ["yarn", "start:prod"]
+EXPOSE 3000
+RUN npm run build
+CMD ["npm", "run", "start:prod"]
