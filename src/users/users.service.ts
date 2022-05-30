@@ -185,6 +185,10 @@ export class UsersService {
     }
   }
 
+  async findMe(user: AuthUser): Promise<User> {
+    return this.userModel.findOne({ _id: user.userId, ...filterDeleted });
+  }
+
   update(id: number, updateUserDto: UpdateUserDto) {
     throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
   }

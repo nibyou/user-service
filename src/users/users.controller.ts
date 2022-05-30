@@ -1,12 +1,12 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
   HttpCode,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
@@ -75,6 +75,24 @@ export class UsersController {
     @AuthenticatedUser() user: AuthUser,
   ): Promise<User> {
     return this.usersService.findOne(id, user);
+  }
+
+  @Get('/me')
+  @ApiOkResponse({
+    status: 200,
+    description: 'The user has been successfully returned.',
+    type: User,
+  })
+  @HttpCode(200)
+  @Roles({
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PRACTITIONER,
+      RealmRoles.USER_PATIENT,
+    ],
+  })
+  findMe(@AuthenticatedUser() user: AuthUser): Promise<User> {
+    return this.usersService.findMe(user);
   }
 
   @Patch(':id')
