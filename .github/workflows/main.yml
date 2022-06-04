@@ -14,11 +14,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: Ubuntu-20.04
+  deploy:
+    runs-on: ubuntu-20.04
     steps:
       - uses: webfactory/ssh-agent@v0.4.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - run: mkdir -p ~/.ssh/ && ssh-keyscan -H ${{ secrets.SERVER_URL }} >> ~/.ssh/known_hosts
-      - run: ssh root@${{ secrets.SERVER_URL }} "cd ${{ github.event.repository.name }} && git pull && docker compose build && docker compose up -d"
+      - run: ssh root@${{ secrets.SERVER_URL }} "cd ${{ github.event.repository.name }} && git pull && docker compose up -d --build"
