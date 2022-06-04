@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   Param,
   Patch,
   Post,
@@ -11,7 +10,12 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthenticatedUser, Public, Roles } from 'nest-keycloak-connect';
 import { AuthUser, JsonResponse, RealmRoles } from '@nibyou/types';
 import { User } from './schemata/user.schema';
@@ -22,12 +26,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @ApiOperation({
+    summary: 'Create a new user',
+  })
   @ApiCreatedResponse({
-    status: 201,
     description: 'The user has been successfully created.',
     type: User,
   })
-  @HttpCode(201)
   @Roles({ roles: [RealmRoles.ADMIN] })
   create(
     @Body() createUserDto: CreateUserDto,
@@ -37,12 +42,13 @@ export class UsersController {
   }
 
   @Post('/register')
+  @ApiOperation({
+    summary: 'Let a user register their account',
+  })
   @ApiCreatedResponse({
-    status: 201,
     description: 'The user has been successfully created.',
     type: User,
   })
-  @HttpCode(201)
   @Public() // register is public
   register(
     @Body() createUserRegisterDto: CreateUserRegisterDto,
@@ -51,24 +57,26 @@ export class UsersController {
   }
 
   @Get()
+  @ApiOperation({
+    summary: 'Find all users',
+  })
   @ApiOkResponse({
-    status: 200,
     description: 'The list of users has been successfully returned.',
     type: [User],
   })
-  @HttpCode(200)
   @Roles({ roles: [RealmRoles.ADMIN] })
   findAll(@AuthenticatedUser() user: AuthUser): Promise<User[]> {
     return this.usersService.findAll(user);
   }
 
   @Get(':id')
+  @ApiOperation({
+    summary: 'Find a single user',
+  })
   @ApiOkResponse({
-    status: 200,
     description: 'The user has been successfully returned.',
     type: User,
   })
-  @HttpCode(200)
   @Roles({ roles: [RealmRoles.ADMIN] })
   findOne(
     @Param('id') id: string,
@@ -78,12 +86,13 @@ export class UsersController {
   }
 
   @Get('/me')
+  @ApiOperation({
+    summary: 'Get the current user',
+  })
   @ApiOkResponse({
-    status: 200,
     description: 'The user has been successfully returned.',
     type: User,
   })
-  @HttpCode(200)
   @Roles({
     roles: [
       RealmRoles.ADMIN,
@@ -101,12 +110,13 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiOperation({
+    summary: 'Delete a user',
+  })
   @ApiOkResponse({
-    status: 200,
     description: 'The user .',
     type: JsonResponse,
   })
-  @HttpCode(200)
   @Roles({ roles: [RealmRoles.ADMIN] })
   remove(
     @Param('id') id: string,
