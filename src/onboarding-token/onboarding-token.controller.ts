@@ -12,6 +12,7 @@ import { CreateOnboardingTokenDto } from './dto/create-onboarding-token.dto';
 import {
   ApiBody,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -37,6 +38,7 @@ export class OnboardingTokenController {
     type: OnboardingToken,
   })
   @ApiBody({ type: CreateOnboardingTokenDto })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({ roles: [RealmRoles.ADMIN, RealmRoles.USER_PRACTITIONER] })
   create(
     @Body() createOnboardingTokenDto: CreateOnboardingTokenDto,
@@ -53,6 +55,7 @@ export class OnboardingTokenController {
     description: 'The onboarding tokens have been successfully retrieved.',
     type: [OnboardingToken],
   })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({ roles: [RealmRoles.ADMIN] })
   findAll(@AuthenticatedUser() user: AuthUser): Promise<OnboardingToken[]> {
     return this.onboardingTokenService.findAll(user);
@@ -62,6 +65,7 @@ export class OnboardingTokenController {
   @ApiOperation({
     summary: 'Find a single onboarding token',
   })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @ApiOkResponse({
     description: 'The onboarding token has been successfully retrieved.',
     type: OnboardingToken,
@@ -83,6 +87,7 @@ export class OnboardingTokenController {
     type: JsonResponse,
   })
   @HttpCode(204)
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({ roles: [RealmRoles.ADMIN] })
   remove(
     @Param('id') id: string,

@@ -12,6 +12,7 @@ import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -33,6 +34,7 @@ export class UsersController {
     description: 'The user has been successfully created.',
     type: User,
   })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({ roles: [RealmRoles.ADMIN] })
   create(
     @Body() createUserDto: CreateUserDto,
@@ -64,6 +66,7 @@ export class UsersController {
     description: 'The list of users has been successfully returned.',
     type: [User],
   })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({ roles: [RealmRoles.ADMIN] })
   findAll(@AuthenticatedUser() user: AuthUser): Promise<User[]> {
     return this.usersService.findAll(user);
@@ -77,6 +80,7 @@ export class UsersController {
     description: 'The user has been successfully returned.',
     type: User,
   })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({ roles: [RealmRoles.ADMIN] })
   findOne(
     @Param('id') id: string,
@@ -93,6 +97,7 @@ export class UsersController {
     description: 'The user has been successfully returned.',
     type: User,
   })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({
     roles: [
       RealmRoles.ADMIN,
@@ -117,6 +122,7 @@ export class UsersController {
     description: 'The user .',
     type: JsonResponse,
   })
+  @ApiForbiddenResponse({ description: 'Forbidden.' })
   @Roles({ roles: [RealmRoles.ADMIN] })
   remove(
     @Param('id') id: string,
