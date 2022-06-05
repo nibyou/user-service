@@ -10,6 +10,7 @@ import { InvoiceInformationModule } from './invoice-information/invoice-informat
 const mongoOptions = {
   user: process.env.MONGO_USER || '',
   pass: process.env.MONGO_PASS || '',
+  dbName: process.env.MONGO_DB || 'test',
 };
 
 @Module({
