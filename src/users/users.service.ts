@@ -37,24 +37,12 @@ export class UsersService {
   }
 
   async register(createUserRegisterDto: CreateUserRegisterDto): Promise<User> {
-    await this.kcAdminClient.auth({
-      username: process.env.KEYCLOAK_UM_USER,
-      password: process.env.KEYCLOAK_UM_PASS,
-      grantType: 'password',
-      clientId: process.env.KEYCLOAK_UM_CLIENT,
-    });
-
-    if (
-      await this.doesUserExist(createUserRegisterDto.email, this.kcAdminClient)
-    ) {
-      throw new HttpException('User already exists', HttpStatus.CONFLICT);
-    }
-
     let onboardingToken: OnboardingTokenDocument;
 
     try {
       onboardingToken = await this.onboardingTokenModel.findOne({
         ...filterInactive,
+        ...filterDeleted,
         _id: createUserRegisterDto.onboardingToken,
         email: createUserRegisterDto.email,
         validUntil: { $gt: new Date() },
@@ -75,165 +63,17 @@ export class UsersService {
       );
     }
 
-    const newUser = new this.userModel(createUserRegisterDto);
-    const userReturn = await newUser.save();
-    const id = userReturn._id;
-
-    const userRep = {
-      username: createUserRegisterDto.email,
-      email: createUserRegisterDto.email,
-      enabled: true,
-      emailVerified: true,
-      credentials: [
-        {
-          type: 'password',
-          value: createUserRegisterDto.password,
-          temporary: false,
-        },
-      ],
-      attributes: {
-        userId: id,
-      },
-      firstName: createUserRegisterDto.firstName,
-      lastName: createUserRegisterDto.lastName,
-      realm: process.env.KEYCLOAK_REALM,
+    const dto: CreateUserDto = {
+      ...createUserRegisterDto,
+      accountType: onboardingToken.accountType,
     };
 
-    const kcResponse = await this.kcAdminClient.users.create(userRep);
-
-    const roles: RoleMappingPayload[] = [];
-
-    const patientRole = await this.kcAdminClient.roles.findOneByName({
-      realm: process.env.KEYCLOAK_REALM,
-      name: RealmRoles.USER_PATIENT.split(':')[1],
-    });
-
-    const practitionerRole = await this.kcAdminClient.roles.findOneByName({
-      realm: process.env.KEYCLOAK_REALM,
-      name: RealmRoles.USER_PRACTITIONER.split(':')[1],
-    });
-
-    if (onboardingToken.accountType === AccountType.PRACTITIONER) {
-      roles.push(practitionerRole as RoleMappingPayload);
-    } else if (onboardingToken.accountType === AccountType.PATIENT) {
-      roles.push(patientRole as RoleMappingPayload);
-    }
-
-    try {
-      await this.kcAdminClient.users.addRealmRoleMappings({
-        id: kcResponse.id,
-        roles,
-        realm: process.env.KEYCLOAK_REALM,
-      });
-    } catch (error) {
-      console.log('error in adding roles', error);
-      throw new HttpException(
-        'Error adding roles to user',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    await this.userModel.updateOne(
-      { _id: id },
-      {
-        $set: {
-          keycloakId: kcResponse.id,
-          status: GlobalStatus.ACTIVE,
-        },
-      },
-    );
-
-    userReturn.keycloakId = kcResponse.id;
-    userReturn.status = GlobalStatus.ACTIVE;
-    return userReturn;
+    return this.addNewUser(dto);
   }
 
   async create(createUserDto: CreateUserDto, user: AuthUser): Promise<User> {
     if (AuthUser.isAdmin(user)) {
-      await this.kcAdminClient.auth({
-        username: process.env.KEYCLOAK_UM_USER,
-        password: process.env.KEYCLOAK_UM_PASS,
-        grantType: 'password',
-        clientId: process.env.KEYCLOAK_UM_CLIENT,
-      });
-
-      if (await this.doesUserExist(createUserDto.email, this.kcAdminClient)) {
-        throw new HttpException('User already exists', HttpStatus.CONFLICT);
-      }
-
-      console.log('Creating user');
-      const newUser = new this.userModel(createUserDto);
-      const userReturn = await newUser.save();
-      const id = userReturn._id;
-
-      console.log('Created user', userReturn, id);
-
-      const userRep = {
-        username: createUserDto.email,
-        email: createUserDto.email,
-        credentials: [
-          {
-            type: 'password',
-            value: createUserDto.password,
-            temporary: false,
-          },
-        ],
-        attributes: {
-          userId: id,
-        },
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        realm: process.env.KEYCLOAK_REALM,
-        realmRoles: [],
-      };
-
-      const kcResponse = await this.kcAdminClient.users.create(userRep);
-
-      const roles: RoleMappingPayload[] = [];
-
-      const patientRole = await this.kcAdminClient.roles.findOneByName({
-        realm: process.env.KEYCLOAK_REALM,
-        name: RealmRoles.USER_PATIENT.split(':')[1],
-      });
-
-      const practitionerRole = await this.kcAdminClient.roles.findOneByName({
-        realm: process.env.KEYCLOAK_REALM,
-        name: RealmRoles.USER_PRACTITIONER.split(':')[1],
-      });
-
-      if (createUserDto.accountType === AccountType.PRACTITIONER) {
-        roles.push(practitionerRole as RoleMappingPayload);
-      } else if (createUserDto.accountType === AccountType.PATIENT) {
-        roles.push(patientRole as RoleMappingPayload);
-      }
-
-      try {
-        await this.kcAdminClient.users.addRealmRoleMappings({
-          id: kcResponse.id,
-          roles,
-          realm: process.env.KEYCLOAK_REALM,
-        });
-      } catch (error) {
-        console.log('error in adding roles', error);
-        throw new HttpException(
-          'Error adding roles to user',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-
-      await this.userModel.updateOne(
-        { _id: id },
-        {
-          $set: {
-            keycloakId: kcResponse.id,
-            status: GlobalStatus.ACTIVE,
-          },
-        },
-      );
-
-      userReturn.keycloakId = kcResponse.id;
-      userReturn.status = GlobalStatus.ACTIVE;
-      return userReturn;
+      return this.addNewUser(createUserDto);
     }
   }
 
@@ -299,5 +139,89 @@ export class UsersService {
     const userExistsKeycloak = allUsers.find((u) => u.email === email);
 
     return !!userExistsMongo || !!userExistsKeycloak;
+  }
+
+  private async addNewUser(createUserDto: CreateUserDto): Promise<User> {
+    await this.kcAdminClient.auth({
+      username: process.env.KEYCLOAK_UM_USER,
+      password: process.env.KEYCLOAK_UM_PASS,
+      grantType: 'password',
+      clientId: process.env.KEYCLOAK_UM_CLIENT,
+    });
+
+    if (await this.doesUserExist(createUserDto.email, this.kcAdminClient)) {
+      throw new HttpException('User already exists', HttpStatus.CONFLICT);
+    }
+    const newUser = new this.userModel(createUserDto);
+    const userReturn = await newUser.save();
+    const id = userReturn._id;
+
+    const userRep = {
+      username: createUserDto.email,
+      email: createUserDto.email,
+      enabled: true,
+      emailVerified: true,
+      credentials: [
+        {
+          type: 'password',
+          value: createUserDto.password,
+          temporary: false,
+        },
+      ],
+      attributes: {
+        userId: id,
+      },
+      firstName: createUserDto.firstName,
+      lastName: createUserDto.lastName,
+      realm: process.env.KEYCLOAK_REALM,
+    };
+
+    const kcResponse = await this.kcAdminClient.users.create(userRep);
+
+    const roles: RoleMappingPayload[] = [];
+
+    const patientRole = await this.kcAdminClient.roles.findOneByName({
+      realm: process.env.KEYCLOAK_REALM,
+      name: RealmRoles.USER_PATIENT.split(':')[1],
+    });
+
+    const practitionerRole = await this.kcAdminClient.roles.findOneByName({
+      realm: process.env.KEYCLOAK_REALM,
+      name: RealmRoles.USER_PRACTITIONER.split(':')[1],
+    });
+
+    if (createUserDto.accountType === AccountType.PRACTITIONER) {
+      roles.push(practitionerRole as RoleMappingPayload);
+    } else if (createUserDto.accountType === AccountType.PATIENT) {
+      roles.push(patientRole as RoleMappingPayload);
+    }
+
+    try {
+      await this.kcAdminClient.users.addRealmRoleMappings({
+        id: kcResponse.id,
+        roles,
+        realm: process.env.KEYCLOAK_REALM,
+      });
+    } catch (error) {
+      console.log('error in adding roles', error);
+      throw new HttpException(
+        'Error adding roles to user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    await this.userModel.updateOne(
+      { _id: id, ...filterDeleted },
+      {
+        $set: {
+          keycloakId: kcResponse.id,
+          status: GlobalStatus.ACTIVE,
+        },
+      },
+    );
+
+    userReturn.keycloakId = kcResponse.id;
+    userReturn.status = GlobalStatus.ACTIVE;
+    return userReturn;
   }
 }
