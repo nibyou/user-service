@@ -31,7 +31,7 @@ export class User {
   @ApiProperty()
   updatedAt: Date;
 
-  @Prop({ type: () => GlobalStatus, default: GlobalStatus.ACTIVE })
+  @Prop({ type: () => GlobalStatus, default: GlobalStatus.PENDING })
   @ApiProperty()
   status: GlobalStatus;
 
