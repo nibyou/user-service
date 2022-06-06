@@ -6,7 +6,7 @@ import { AccountType } from '../dto/create-onboarding-token.dto';
 
 export type OnboardingTokenDocument = OnboardingToken & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class OnboardingToken {
   @Prop({ required: true })
   @ApiProperty()
