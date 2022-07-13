@@ -27,7 +27,6 @@ export class User {
   @ApiProperty()
   keycloakId: string;
 
-  @Prop()
   @ApiProperty({
     type: String,
     format: 'uuid',

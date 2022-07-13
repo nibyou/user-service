@@ -24,7 +24,6 @@ export class OnboardingToken {
   @ApiProperty()
   accountType: AccountType;
 
-  @Prop()
   @ApiProperty({
     type: String,
     format: 'uuid',
