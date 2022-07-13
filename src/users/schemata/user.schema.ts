@@ -26,6 +26,21 @@ export class User {
   @Prop()
   @ApiProperty()
   keycloakId: string;
+
+  @Prop()
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+  })
+  _id: string;
+
+  @Prop()
+  @ApiProperty()
+  createdAt: Date;
+
+  @Prop()
+  @ApiProperty()
+  updatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

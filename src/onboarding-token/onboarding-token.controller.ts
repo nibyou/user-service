@@ -10,6 +10,7 @@ import {
 import { OnboardingTokenService } from './onboarding-token.service';
 import { CreateOnboardingTokenDto } from './dto/create-onboarding-token.dto';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -23,6 +24,7 @@ import { AuthenticatedUser, Roles } from 'nest-keycloak-connect';
 import { AuthUser, JsonResponse, RealmRoles } from '@nibyou/types';
 
 @ApiTags('onboarding-token')
+@ApiBearerAuth()
 @Controller('onboarding-token')
 export class OnboardingTokenController {
   constructor(

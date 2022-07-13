@@ -1,11 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { InvoiceInformationService } from './invoice-information.service';
 import { CreateInvoiceInformationDto } from './dto/create-invoice-information.dto';
 import { UpdateInvoiceInformationDto } from './dto/update-invoice-information.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('invoice-information')
+@ApiBearerAuth()
 @Controller('invoice-information')
 export class InvoiceInformationController {
-  constructor(private readonly invoiceInformationService: InvoiceInformationService) {}
+  constructor(
+    private readonly invoiceInformationService: InvoiceInformationService,
+  ) {}
 
   @Post()
   create(@Body() createInvoiceInformationDto: CreateInvoiceInformationDto) {
@@ -23,8 +36,14 @@ export class InvoiceInformationController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInvoiceInformationDto: UpdateInvoiceInformationDto) {
-    return this.invoiceInformationService.update(+id, updateInvoiceInformationDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateInvoiceInformationDto: UpdateInvoiceInformationDto,
+  ) {
+    return this.invoiceInformationService.update(
+      +id,
+      updateInvoiceInformationDto,
+    );
   }
 
   @Delete(':id')

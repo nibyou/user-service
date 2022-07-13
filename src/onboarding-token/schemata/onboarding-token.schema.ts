@@ -23,6 +23,21 @@ export class OnboardingToken {
   @Prop({ required: true, type: () => AccountType })
   @ApiProperty()
   accountType: AccountType;
+
+  @Prop()
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+  })
+  _id: string;
+
+  @Prop()
+  @ApiProperty()
+  createdAt: Date;
+
+  @Prop()
+  @ApiProperty()
+  updatedAt: Date;
 }
 
 export const OnboardingTokenSchema =
