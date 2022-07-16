@@ -20,7 +20,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { OnboardingToken } from './schemata/onboarding-token.schema';
-import { AuthenticatedUser, Roles } from 'nest-keycloak-connect';
+import { AuthenticatedUser, Public, Roles } from 'nest-keycloak-connect';
 import { AuthUser, JsonResponse, RealmRoles } from '@nibyou/types';
 
 @ApiTags('onboarding-token')
@@ -72,12 +72,9 @@ export class OnboardingTokenController {
     description: 'The onboarding token has been successfully retrieved.',
     type: OnboardingToken,
   })
-  @Roles({ roles: [RealmRoles.ADMIN] })
-  findOne(
-    @Param('id') id: string,
-    @AuthenticatedUser() user: AuthUser,
-  ): Promise<OnboardingToken> {
-    return this.onboardingTokenService.findOne(id, user);
+  @Public()
+  findOne(@Param('id') id: string): Promise<OnboardingToken> {
+    return this.onboardingTokenService.findOne(id);
   }
 
   @Delete(':id')

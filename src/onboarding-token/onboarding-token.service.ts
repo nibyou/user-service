@@ -55,7 +55,7 @@ export class OnboardingTokenService {
           name: onboardingToken.email,
         },
       ],
-      templateId: +process.env.MAIL_TEMPLATE_ONBOARDING_GENERAL,
+      templateId: +process.env.MAIL_TEMPLATE_ONBOARDING_PRACTITIONER,
       params: {
         TOKEN: onboardingToken._id,
         PRACTICE_NAME: '',
@@ -85,10 +85,8 @@ export class OnboardingTokenService {
     }
   }
 
-  async findOne(id: string, user: AuthUser): Promise<OnboardingToken> {
-    if (AuthUser.isAdmin(user)) {
-      return this.onboardingTokenModel.findOne({ _id: id, ...filterInactive });
-    }
+  async findOne(id: string): Promise<OnboardingToken> {
+    return this.onboardingTokenModel.findOne({ _id: id, ...filterInactive });
   }
 
   async remove(id: string, user: AuthUser): Promise<void> {
