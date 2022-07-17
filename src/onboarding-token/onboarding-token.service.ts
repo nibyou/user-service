@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   AccountType,
   CreateOnboardingTokenDto,
@@ -86,7 +86,21 @@ export class OnboardingTokenService {
   }
 
   async findOne(id: string): Promise<OnboardingToken> {
-    return this.onboardingTokenModel.findOne({ _id: id, ...filterInactive });
+    try {
+      const token = await this.onboardingTokenModel.findOne({
+        _id: id,
+        ...filterInactive,
+      });
+      if (token) {
+        return token;
+      }
+    } catch (e) {
+      throw new HttpException(
+        'Invalid onboarding token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    throw new HttpException('Invalid onboarding token', HttpStatus.BAD_REQUEST);
   }
 
   async remove(id: string, user: AuthUser): Promise<void> {
