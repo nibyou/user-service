@@ -21,7 +21,9 @@ export class OnboardingToken {
   validUntil: Date;
 
   @Prop({ required: true, type: () => AccountType })
-  @ApiProperty()
+  @ApiProperty({
+    enum: AccountType,
+  })
   accountType: AccountType;
 
   @ApiProperty({
