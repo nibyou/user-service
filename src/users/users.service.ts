@@ -9,7 +9,7 @@ import {
 } from '@nibyou/types';
 import { User, UserDocument } from './schemata/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import {
   filterDeleted,
@@ -44,7 +44,6 @@ export class UsersService {
         ...filterInactive,
         ...filterDeleted,
         _id: createUserRegisterDto.onboardingToken,
-        email: createUserRegisterDto.email,
         validUntil: { $gt: new Date() },
       });
 
@@ -152,6 +151,16 @@ export class UsersService {
     if (await this.doesUserExist(createUserDto.email, this.kcAdminClient)) {
       throw new HttpException('User already exists', HttpStatus.CONFLICT);
     }
+
+    (createUserDto as any).cryptoData = {
+      privateKey: {
+        encWithPassword: createUserDto.privateKeyEncWithPassword,
+        encWithRecovery: createUserDto.privateKeyEncWithRecovery,
+      },
+    };
+
+    delete createUserDto.privateKeyEncWithRecovery;
+    delete createUserDto.privateKeyEncWithPassword;
 
     const newUser = new this.userModel(createUserDto);
     const userReturn = await newUser.save();

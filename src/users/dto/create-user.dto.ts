@@ -16,6 +16,12 @@ export class CreateUserDto {
 
   @ApiPropertyOptional({ enum: AccountType })
   accountType?: AccountType;
+
+  @ApiProperty()
+  privateKeyEncWithPassword: string;
+
+  @ApiProperty()
+  privateKeyEncWithRecovery: string;
 }
 
 export class CreateUserRegisterDto {
@@ -33,4 +39,10 @@ export class CreateUserRegisterDto {
 
   @ApiProperty()
   onboardingToken: string;
+
+  @ApiProperty()
+  privateKeyEncWithPassword: string;
+
+  @ApiProperty()
+  privateKeyEncWithRecovery: string;
 }
