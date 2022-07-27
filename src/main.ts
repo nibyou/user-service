@@ -6,11 +6,15 @@ import 'dotenv/config';
 (async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  console.log(process.env.CORS_ORIGINS.split(','));
+
   const corsOptionsCallback = (req, callback) => {
     const corsOptions = { origin: false, credentials: true };
     if (process.env.CORS_ORIGINS.split(',').includes(req.headers.origin)) {
+      console.log('CORS origin: ', req.headers.origin);
       corsOptions.origin = true;
-    }
+    } else
+      console.log('\x1b[31m', 'CORS origin not allowed: ', req.headers.origin);
     callback(null, corsOptions);
   };
 
