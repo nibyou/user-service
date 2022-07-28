@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { AddProfileUpdateDto, UpdateUserDto } from './dto/update-user.dto';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -23,11 +23,6 @@ import {
 import { AuthenticatedUser, Public, Roles } from 'nest-keycloak-connect';
 import { AuthUser, JsonResponse, RealmRoles } from '@nibyou/types';
 import { User } from './schemata/user.schema';
-
-export class AddProfileUpdate {
-  profileId: string;
-  type: 'practitioner' | 'profile';
-}
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -131,7 +126,7 @@ export class UsersController {
     description: 'The user has been successfully deleted.',
     type: User,
   })
-  @ApiBody({ type: AddProfileUpdate })
+  @ApiBody({ type: AddProfileUpdateDto })
   @Roles({
     roles: [
       RealmRoles.ADMIN,
@@ -141,7 +136,7 @@ export class UsersController {
   })
   addProfile(
     @Param('id') id: string,
-    @Body() updates: AddProfileUpdate,
+    @Body() updates: AddProfileUpdateDto,
   ): Promise<User> {
     return this.usersService.addProfile(id, updates.profileId, updates.type);
   }
