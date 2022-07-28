@@ -108,8 +108,10 @@ export class UsersService {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
     if (type === 'profile') {
+      if (!user.profiles) user.profiles = [];
       user.profiles = [...user.profiles, profileId];
     } else if (type === 'practitioner') {
+      if (!user.practitioners) user.practitioners = [];
       user.practitioners = [...user.practitioners, profileId];
     }
     await user.save();
