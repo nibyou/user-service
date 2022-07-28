@@ -13,6 +13,7 @@ import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
@@ -125,6 +126,7 @@ export class UsersController {
     description: 'The user has been successfully deleted.',
     type: User,
   })
+  @ApiBody({ type: AddProfileUpdate })
   @Roles({
     roles: [
       RealmRoles.ADMIN,
@@ -134,7 +136,7 @@ export class UsersController {
   })
   addProfile(
     @Param('id') id: string,
-    @Body() updates: { profileId: string; type: 'practitioner' | 'profile' },
+    @Body() updates: AddProfileUpdate,
   ): Promise<User> {
     return this.usersService.addProfile(id, updates.profileId, updates.type);
   }
@@ -156,4 +158,9 @@ export class UsersController {
     //return this.usersService.remove(id, user);
     return this.usersService.markDeleted(id, user);
   }
+}
+
+export class AddProfileUpdate {
+  profileId: string;
+  type: 'practitioner' | 'profile';
 }
