@@ -24,6 +24,11 @@ import { AuthenticatedUser, Public, Roles } from 'nest-keycloak-connect';
 import { AuthUser, JsonResponse, RealmRoles } from '@nibyou/types';
 import { User } from './schemata/user.schema';
 
+export class AddProfileUpdate {
+  profileId: string;
+  type: 'practitioner' | 'profile';
+}
+
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
@@ -158,9 +163,4 @@ export class UsersController {
     //return this.usersService.remove(id, user);
     return this.usersService.markDeleted(id, user);
   }
-}
-
-export class AddProfileUpdate {
-  profileId: string;
-  type: 'practitioner' | 'profile';
 }
