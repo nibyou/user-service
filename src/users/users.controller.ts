@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
@@ -113,7 +114,29 @@ export class UsersController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
+  }
+
+  @Put(':id/profile')
+  @ApiOperation({
+    summary: 'Add a new profile/practitioner to a user',
+  })
+  @ApiOkResponse({
+    description: 'The user has been successfully deleted.',
+    type: User,
+  })
+  @Roles({
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER,
+    ],
+  })
+  addProfile(
+    @Param('id') id: string,
+    @Body() updates: { profileId: string; type: 'practitioner' | 'profile' },
+  ): Promise<User> {
+    return this.usersService.addProfile(id, updates.profileId, updates.type);
   }
 
   @Delete(':id')

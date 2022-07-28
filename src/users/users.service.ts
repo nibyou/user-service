@@ -92,8 +92,28 @@ export class UsersService {
     return this.userModel.findOne({ _id: user.userId, ...filterDeleted });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  update(id: string, updateUserDto: UpdateUserDto) {
     throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
+  }
+
+  async addProfile(
+    id: string,
+    profileId: string,
+    type: 'profile' | 'practitioner',
+  ) {
+    let user: UserDocument;
+    try {
+      user = await this.userModel.findOne({ _id: id });
+    } catch (e) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+    if (type === 'profile') {
+      user.profiles = [...user.profiles, profileId];
+    } else if (type === 'practitioner') {
+      user.practitioners = [...user.practitioners, profileId];
+    }
+    await user.save();
+    return user;
   }
 
   async remove(id: string, user: AuthUser) {
@@ -141,12 +161,20 @@ export class UsersService {
   }
 
   private async addNewUser(createUserDto: CreateUserDto): Promise<User> {
-    await this.kcAdminClient.auth({
-      username: process.env.KEYCLOAK_UM_USER,
-      password: process.env.KEYCLOAK_UM_PASS,
-      grantType: 'password',
-      clientId: process.env.KEYCLOAK_UM_CLIENT,
-    });
+    try {
+      await this.kcAdminClient.auth({
+        username: process.env.KEYCLOAK_UM_USER,
+        password: process.env.KEYCLOAK_UM_PASS,
+        grantType: 'password',
+        clientId: process.env.KEYCLOAK_UM_CLIENT,
+      });
+    } catch (e) {
+      console.log('error in authing to keycloak', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
 
     if (await this.doesUserExist(createUserDto.email, this.kcAdminClient)) {
       throw new HttpException('User already exists', HttpStatus.CONFLICT);
@@ -163,7 +191,13 @@ export class UsersService {
     delete createUserDto.privateKeyEncWithPassword;
 
     const newUser = new this.userModel(createUserDto);
-    const userReturn = await newUser.save();
+    const userReturn = await newUser.save().catch((error) => {
+      console.log('error in saving user', error);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    });
     const id = userReturn._id;
 
     const userRep = {
@@ -186,7 +220,15 @@ export class UsersService {
       realm: process.env.KEYCLOAK_REALM,
     };
 
-    const kcResponse = await this.kcAdminClient.users.create(userRep);
+    const kcResponse = await this.kcAdminClient.users
+      .create(userRep)
+      .catch((error) => {
+        console.log('error in creating kc user', error);
+        throw new HttpException(
+          'Something went wrong.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      });
 
     const roles: RoleMappingPayload[] = [];
 
@@ -215,20 +257,28 @@ export class UsersService {
     } catch (error) {
       console.log('error in adding roles', error);
       throw new HttpException(
-        'Error adding roles to user',
+        'Something went wrong.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    await this.userModel.updateOne(
-      { _id: id, ...filterDeleted },
-      {
-        $set: {
-          keycloakId: kcResponse.id,
-          status: GlobalStatus.ACTIVE,
+    await this.userModel
+      .updateOne(
+        { _id: id, ...filterDeleted },
+        {
+          $set: {
+            keycloakId: kcResponse.id,
+            status: GlobalStatus.ACTIVE,
+          },
         },
-      },
-    );
+      )
+      .catch((error) => {
+        console.log('error in updating user', error);
+        throw new HttpException(
+          'Something went wrong.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      });
 
     userReturn.keycloakId = kcResponse.id;
     userReturn.status = GlobalStatus.ACTIVE;

@@ -40,7 +40,7 @@ export class CryptoData {
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   @ApiProperty()
   email: string;
 
@@ -63,6 +63,14 @@ export class User {
   @Prop()
   @ApiProperty()
   cryptoData: CryptoData;
+
+  @Prop({ type: () => [String], nullable: true })
+  @ApiPropertyOptional({ type: [String] })
+  profiles?: string[];
+
+  @Prop({ type: () => [String], nullable: true })
+  @ApiPropertyOptional({ type: [String] })
+  practitioners?: string[];
 
   @ApiProperty({
     type: String,
