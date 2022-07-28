@@ -137,7 +137,11 @@ export class UsersController {
   addProfile(
     @Param('id') id: string,
     @Body() updates: AddProfileUpdateDto,
+    @AuthenticatedUser() user: AuthUser,
   ): Promise<User> {
+    if (!AuthUser.isAdmin(user)) {
+      id = user.userId;
+    }
     return this.usersService.addProfile(id, updates.profileId, updates.type);
   }
 
