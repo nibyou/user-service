@@ -21,6 +21,7 @@ import {
 } from '../onboarding-token/schemata/onboarding-token.schema';
 import { AccountType } from '../onboarding-token/dto/create-onboarding-token.dto';
 import { RoleMappingPayload } from '@keycloak/keycloak-admin-client/lib/defs/roleRepresentation';
+import fetch from 'node-fetch';
 
 @Injectable()
 export class UsersService {
@@ -282,6 +283,26 @@ export class UsersService {
         );
       });
 
+    if (createUserDto.addressString && createUserDto.recoveryPassword) {
+      const accessToken = await this.kcAdminClient.getAccessToken();
+      const letter = {
+        name: `${createUserDto.firstName} ${createUserDto.lastName}`,
+        address: createUserDto.addressString,
+        recoveryPassword: createUserDto.recoveryPassword,
+      };
+
+      await fetch(
+        process.env.MAIL_SERVICE_BASE_URL + '/letter/onboarding-letter',
+        {
+          method: 'POST',
+          body: JSON.stringify(letter),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+    }
     userReturn.keycloakId = kcResponse.id;
     userReturn.status = GlobalStatus.ACTIVE;
     return userReturn;

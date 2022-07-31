@@ -22,6 +22,12 @@ export class CreateUserDto {
 
   @ApiProperty()
   privateKeyEncWithRecovery: string;
+
+  @ApiPropertyOptional()
+  recoveryPassword?: string;
+
+  @ApiPropertyOptional()
+  addressString?: string;
 }
 
 export class CreateUserRegisterDto {
@@ -45,4 +51,10 @@ export class CreateUserRegisterDto {
 
   @ApiProperty()
   privateKeyEncWithRecovery: string;
+
+  @ApiPropertyOptional()
+  recoveryPassword?: string;
+
+  @ApiPropertyOptional()
+  addressString?: string;
 }
