@@ -316,7 +316,13 @@ export class UsersService {
             Authorization: `Bearer ${accessToken}`,
           },
         },
-      );
+      ).catch((error) => {
+        console.error('error in sending letter', error);
+        throw new HttpException(
+          'Something went wrong sending the letter.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      });
     }
     userReturn.keycloakId = kcResponse.id;
     userReturn.status = GlobalStatus.ACTIVE;
