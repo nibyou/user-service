@@ -163,6 +163,21 @@ export class UsersService {
     return !!userExistsMongo || !!userExistsKeycloak;
   }
 
+  private static async getAccessToken(): Promise<string> {
+    const response = await fetch(
+      `${process.env.KEYCLOAK_URL}/realms/${process.env.KEYCLOAK_ADMIN_REALM}/protocol/openid-connect/token`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `grant_type=password&username=${process.env.KEYCLOAK_ADMIN_USER}&password=${process.env.KEYCLOAK_ADMIN_PASS}&client_id=${process.env.KEYCLOAK_ADMIN_CLIENT}`,
+      },
+    );
+    const json = await response.json();
+    return json.access_token;
+  }
+
   private async addNewUser(createUserDto: CreateUserDto): Promise<User> {
     try {
       await this.kcAdminClient.auth({
@@ -284,7 +299,7 @@ export class UsersService {
       });
 
     if (createUserDto.addressString && createUserDto.recoveryPassword) {
-      const accessToken = await this.kcAdminClient.getAccessToken();
+      const accessToken = await UsersService.getAccessToken();
       const letter = {
         name: `${createUserDto.firstName} ${createUserDto.lastName}`,
         address: createUserDto.addressString,
