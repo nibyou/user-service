@@ -1,6 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  AddSymKeyDto,
+  RemoveSymKeyDto,
+  RemoveUserProfileDto,
+  UpdateUserDto,
+  UpdateUserEmailDto,
+  UpdateUserNameDto,
+  UpdateUserPrivateKeyDto,
+} from './dto/update-user.dto';
 import {
   AuthUser,
   GlobalStatus,
@@ -97,6 +105,146 @@ export class UsersService {
     throw new HttpException('Not implemented', HttpStatus.NOT_IMPLEMENTED);
   }
 
+  async updateEmail(id: string, { email }: UpdateUserEmailDto) {
+    try {
+      await this.kcAdminClient.auth({
+        username: process.env.KEYCLOAK_UM_USER,
+        password: process.env.KEYCLOAK_UM_PASS,
+        grantType: 'password',
+        clientId: process.env.KEYCLOAK_UM_CLIENT,
+      });
+    } catch (e) {
+      console.log('error in authing to keycloak', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    try {
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        throw 'User not found';
+      }
+      user.email = email;
+
+      await this.kcAdminClient.users.update(
+        { id: user.keycloakId, realm: process.env.KEYCLOAK_REALM },
+        {
+          email,
+        },
+      );
+
+      return user.save();
+    } catch (e) {
+      console.error('error in updating email', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateName(id: string, { firstName, lastName }: UpdateUserNameDto) {
+    try {
+      await this.kcAdminClient.auth({
+        username: process.env.KEYCLOAK_UM_USER,
+        password: process.env.KEYCLOAK_UM_PASS,
+        grantType: 'password',
+        clientId: process.env.KEYCLOAK_UM_CLIENT,
+      });
+    } catch (e) {
+      console.log('error in authing to keycloak', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    try {
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        throw 'User not found';
+      }
+      user.firstName = firstName;
+      user.lastName = lastName;
+
+      await this.kcAdminClient.users.update(
+        { id: user.keycloakId, realm: process.env.KEYCLOAK_REALM },
+        {
+          firstName,
+          lastName,
+        },
+      );
+
+      return user.save();
+    } catch (e) {
+      console.error('error in updating name', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updatePrivateKey(id: string, dto: UpdateUserPrivateKeyDto) {
+    try {
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        throw 'User not found';
+      }
+
+      user.cryptoData.privateKey = {
+        encWithPassword: dto.privateKeyEncWithPassword,
+        encWithRecovery: dto.privateKeyEncWithRecovery,
+      };
+
+      return user.save();
+    } catch (e) {
+      console.error('error in updating private key', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async addSymmetricKey(id: string, dto: AddSymKeyDto) {
+    try {
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        throw 'User not found';
+      }
+
+      user.cryptoData.symKeys.push(dto);
+
+      return user.save();
+    } catch (e) {
+      console.error('error in adding symmetric key', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async removeSymmetricKey(id: string, dto: RemoveSymKeyDto) {
+    try {
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        throw 'User not found';
+      }
+
+      user.cryptoData.symKeys = user.cryptoData.symKeys.filter(
+        (key) => key.keyId !== dto.keyId,
+      );
+    } catch (e) {
+      console.error('error in removing symmetric key', e);
+      throw new HttpException(
+        'Something went wrong.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async addProfile(
     id: string,
     profileId: string,
@@ -119,8 +267,43 @@ export class UsersService {
     return user;
   }
 
+  async removeProfile(id: string, dto: RemoveUserProfileDto) {
+    try {
+      const user = await this.userModel.findOne({ _id: id });
+      if (!user) {
+        throw 'User not found';
+      }
+
+      if (user.profiles?.length > 0) {
+        user.profiles = user.profiles.filter(
+          (profile) => profile !== dto.profileId,
+        );
+      } else if (user.practitioners?.length > 0) {
+        user.practitioners = user.practitioners.filter(
+          (profile) => profile !== dto.profileId,
+        );
+      }
+
+      return user.save();
+    } catch (e) {}
+  }
+
   async remove(id: string, user: AuthUser) {
     if (AuthUser.isAdmin(user)) {
+      try {
+        await this.kcAdminClient.auth({
+          username: process.env.KEYCLOAK_UM_USER,
+          password: process.env.KEYCLOAK_UM_PASS,
+          grantType: 'password',
+          clientId: process.env.KEYCLOAK_UM_CLIENT,
+        });
+      } catch (e) {
+        console.log('error in authing to keycloak', e);
+        throw new HttpException(
+          'Something went wrong.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
       const userToDelete = await this.userModel.findOneAndDelete({ _id: id });
       await this.kcAdminClient.users.del({
         realm: process.env.KEYCLOAK_REALM,
@@ -136,7 +319,20 @@ export class UsersService {
         { _id: id, ...filterDeleted },
         { status: GlobalStatus.DELETED },
       );
-
+      try {
+        await this.kcAdminClient.auth({
+          username: process.env.KEYCLOAK_UM_USER,
+          password: process.env.KEYCLOAK_UM_PASS,
+          grantType: 'password',
+          clientId: process.env.KEYCLOAK_UM_CLIENT,
+        });
+      } catch (e) {
+        console.log('error in authing to keycloak', e);
+        throw new HttpException(
+          'Something went wrong.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
       await this.kcAdminClient.users.del({
         realm: process.env.KEYCLOAK_REALM,
         id: userToDelete.keycloakId,

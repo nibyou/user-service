@@ -33,7 +33,7 @@ export class CryptoData {
   @ApiProperty({ type: PrivateKey })
   privateKey: PrivateKey;
 
-  @Prop({ type: () => [SymmetricKey], nullable: true })
+  @Prop({ type: () => [SymmetricKey], default: [] })
   @ApiPropertyOptional({ type: [SymmetricKey] })
   symKeys: SymmetricKey[];
 }
@@ -64,11 +64,11 @@ export class User {
   @ApiProperty()
   cryptoData: CryptoData;
 
-  @Prop({ type: () => [String], nullable: true })
+  @Prop({ type: () => [String], default: [] })
   @ApiPropertyOptional({ type: [String] })
   profiles?: string[];
 
-  @Prop({ type: () => [String], nullable: true })
+  @Prop({ type: () => [String], default: [] })
   @ApiPropertyOptional({ type: [String] })
   practitioners?: string[];
 

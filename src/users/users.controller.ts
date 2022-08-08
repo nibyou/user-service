@@ -1,28 +1,33 @@
 import {
   Body,
   Controller,
-  Delete,
-  Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
-  Post,
-  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, CreateUserRegisterDto } from './dto/create-user.dto';
-import { AddProfileUpdateDto, UpdateUserDto } from './dto/update-user.dto';
 import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiCreatedResponse,
-  ApiForbiddenResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
-import { AuthenticatedUser, Public, Roles } from 'nest-keycloak-connect';
+  AddProfileUpdateDto,
+  AddSymKeyDto,
+  RemoveSymKeyDto,
+  RemoveUserProfileDto,
+  UpdateUserDto,
+  UpdateUserEmailDto,
+  UpdateUserNameDto,
+  UpdateUserPrivateKeyDto,
+} from './dto/update-user.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { AuthenticatedUser } from 'nest-keycloak-connect';
 import { AuthUser, JsonResponse, RealmRoles } from '@nibyou/types';
 import { User } from './schemata/user.schema';
+import {
+  CreateRequest,
+  DeleteRequest,
+  ReadRequest,
+  UpdateRequest,
+} from '@nibyou/types';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -30,16 +35,12 @@ import { User } from './schemata/user.schema';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  @ApiOperation({
-    summary: 'Create a new user',
-  })
-  @ApiCreatedResponse({
+  @CreateRequest({
+    summary: 'Create a new User',
     description: 'The user has been successfully created.',
-    type: User,
+    returnType: User,
+    roles: [RealmRoles.ADMIN],
   })
-  @ApiForbiddenResponse({ description: 'Forbidden.' })
-  @Roles({ roles: [RealmRoles.ADMIN] })
   create(
     @Body() createUserDto: CreateUserDto,
     @AuthenticatedUser() user: AuthUser,
@@ -47,45 +48,35 @@ export class UsersController {
     return this.usersService.create(createUserDto, user);
   }
 
-  @Post('/register')
-  @ApiOperation({
+  @CreateRequest({
     summary: 'Let a user register their account',
-  })
-  @ApiCreatedResponse({
     description: 'The user has been successfully created.',
-    type: User,
+    returnType: User,
+    roles: false, // register is public
   })
-  @Public() // register is public
   register(
     @Body() createUserRegisterDto: CreateUserRegisterDto,
   ): Promise<User> {
     return this.usersService.register(createUserRegisterDto);
   }
 
-  @Get()
-  @ApiOperation({
+  @ReadRequest({
     summary: 'Find all users',
-  })
-  @ApiOkResponse({
     description: 'The list of users has been successfully returned.',
-    type: [User],
+    returnType: [User],
+    roles: [RealmRoles.ADMIN],
   })
-  @ApiForbiddenResponse({ description: 'Forbidden.' })
-  @Roles({ roles: [RealmRoles.ADMIN] })
   findAll(@AuthenticatedUser() user: AuthUser): Promise<User[]> {
     return this.usersService.findAll(user);
   }
 
-  @Get(':id')
-  @ApiOperation({
+  @ReadRequest({
+    path: ':id',
     summary: 'Find a single user',
-  })
-  @ApiOkResponse({
     description: 'The user has been successfully returned.',
-    type: User,
+    returnType: User,
+    roles: [RealmRoles.ADMIN],
   })
-  @ApiForbiddenResponse({ description: 'Forbidden.' })
-  @Roles({ roles: [RealmRoles.ADMIN] })
   findOne(
     @Param('id') id: string,
     @AuthenticatedUser() user: AuthUser,
@@ -93,16 +84,11 @@ export class UsersController {
     return this.usersService.findOne(id, user);
   }
 
-  @Get('/me')
-  @ApiOperation({
-    summary: 'Get the current user',
-  })
-  @ApiOkResponse({
+  @ReadRequest({
+    path: 'me',
+    summary: 'Find a single user',
     description: 'The user has been successfully returned.',
-    type: User,
-  })
-  @ApiForbiddenResponse({ description: 'Forbidden.' })
-  @Roles({
+    returnType: User,
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PRACTITIONER,
@@ -118,16 +104,109 @@ export class UsersController {
     return this.usersService.update(id, updateUserDto);
   }
 
-  @Put(':id/profile')
-  @ApiOperation({
+  @UpdateRequest({
+    path: ':id/email',
+    summary: "Update a user's email",
+    description: "The user's email has been updated.",
+    returnType: User,
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER,
+    ],
+  })
+  updateEmail(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserEmailDto,
+    @AuthenticatedUser() user: AuthUser,
+  ) {
+    if (AuthUser.isAdmin(user) || id === user.userId)
+      return this.usersService.updateEmail(id, dto);
+    else throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
+  }
+
+  @UpdateRequest({
+    path: ':id/name',
+    summary: "Update a user's name",
+    description: "The user's name has been updated.",
+    returnType: User,
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER,
+    ],
+  })
+  updateName(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserNameDto,
+    @AuthenticatedUser() user: AuthUser,
+  ) {
+    if (AuthUser.isAdmin(user) || id === user.userId)
+      return this.usersService.updateName(id, dto);
+    else throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
+  }
+
+  @UpdateRequest({
+    path: ':id/private-key',
+    summary: "Update a user's private key",
+    description: "The user's private key has been updated.",
+    returnType: User,
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER,
+    ],
+  })
+  updatePrivateKey(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserPrivateKeyDto,
+    @AuthenticatedUser() user: AuthUser,
+  ) {
+    if (AuthUser.isAdmin(user) || id === user.userId)
+      return this.usersService.updatePrivateKey(id, dto);
+  }
+
+  @CreateRequest({
+    path: ':id/symmetric-key',
+    summary: 'Add a new symmetric key to a user',
+    description: 'The symmetric key has been added to the user',
+    returnType: User,
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER,
+    ],
+  })
+  addSymmetricKey(@Param('id') id: string, @Body() dto: AddSymKeyDto) {
+    return this.usersService.addSymmetricKey(id, dto);
+  }
+
+  @DeleteRequest({
+    path: ':id/symmetric-key',
+    summary: 'Remove a symmetric key from a user',
+    description: 'The symmetric key has been removed from the user',
+    returnType: User,
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER,
+    ],
+  })
+  removeSymmetricKey(
+    @Param('id') id: string,
+    @Body() dto: RemoveSymKeyDto,
+    @AuthenticatedUser() user: AuthUser,
+  ) {
+    if (AuthUser.isAdmin(user) || id === user.userId)
+      return this.usersService.removeSymmetricKey(id, dto);
+    else throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
+  }
+
+  @CreateRequest({
+    path: ':id/profile',
     summary: 'Add a new profile/practitioner to a user',
-  })
-  @ApiOkResponse({
-    description: 'The user has been successfully deleted.',
-    type: User,
-  })
-  @ApiBody({ type: AddProfileUpdateDto })
-  @Roles({
+    description: 'The profile has been successfully added to the user.',
+    returnType: User,
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
@@ -139,26 +218,50 @@ export class UsersController {
     @Body() updates: AddProfileUpdateDto,
     @AuthenticatedUser() user: AuthUser,
   ): Promise<User> {
-    if (!AuthUser.isAdmin(user)) {
-      id = user.userId;
-    }
-    return this.usersService.addProfile(id, updates.profileId, updates.type);
+    if (AuthUser.isAdmin(user) || id === user.userId)
+      return this.usersService.addProfile(id, updates.profileId, updates.type);
+    else throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
   }
 
-  @Delete(':id')
-  @ApiOperation({
+  @DeleteRequest({
+    path: ':id/profile',
+    summary: 'Remove a profile/practitioner from a user',
+    description:
+      'The profile/practitioner has been successfully removed from the user.',
+    returnType: User,
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER,
+    ],
+  })
+  removeProfile(
+    @Param('id') id: string,
+    @Body() body: RemoveUserProfileDto,
+    @AuthenticatedUser() user: AuthUser,
+  ): Promise<User> {
+    if (AuthUser.isAdmin(user) || id === user.userId)
+      return this.usersService.removeProfile(id, body);
+    else throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
+  }
+
+  @DeleteRequest({
+    path: ':id',
     summary: 'Delete a user',
+    description: 'The user has been successfully deleted.',
+    returnType: JsonResponse,
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PRACTITIONER,
+      RealmRoles.USER_PATIENT,
+    ],
   })
-  @ApiOkResponse({
-    description: 'The user .',
-    type: JsonResponse,
-  })
-  @ApiForbiddenResponse({ description: 'Forbidden.' })
-  @Roles({ roles: [RealmRoles.ADMIN] })
   remove(
     @Param('id') id: string,
     @AuthenticatedUser() user: AuthUser,
   ): Promise<JsonResponse> {
+    if (!AuthUser.isAdmin(user) && id !== user.userId)
+      throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
     //return this.usersService.remove(id, user);
     return this.usersService.markDeleted(id, user);
   }
