@@ -49,6 +49,7 @@ export class UsersController {
   }
 
   @CreateRequest({
+    path: 'register',
     summary: 'Let a user register their account',
     description: 'The user has been successfully created.',
     returnType: User,
