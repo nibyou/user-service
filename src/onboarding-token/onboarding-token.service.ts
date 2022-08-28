@@ -67,7 +67,7 @@ export class OnboardingTokenService {
       emailBody.templateId = +process.env.MAIL_TEMPLATE_ONBOARDING_PATIENT;
     }
 
-    await fetch(process.env.MAIL_SERVICE_BASE_URL + '/email', {
+    let email = await fetch(process.env.MAIL_SERVICE_BASE_URL + '/email', {
       method: 'POST',
       body: JSON.stringify(emailBody),
       headers: {
@@ -75,6 +75,10 @@ export class OnboardingTokenService {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+
+    email = await email.json();
+
+    console.log(email.data);
 
     return onboardingToken.save();
   }
