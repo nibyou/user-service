@@ -78,7 +78,7 @@ export class OnboardingTokenService {
 
     email = await email.json();
 
-    console.log(email.data);
+    console.log(email);
 
     return onboardingToken.save();
   }
