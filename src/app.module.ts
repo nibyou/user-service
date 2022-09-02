@@ -5,7 +5,6 @@ import { KeycloakModule } from '@nibyou/keycloak';
 import { UsersModule } from './users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OnboardingTokenModule } from './onboarding-token/onboarding-token.module';
-import { InvoiceInformationModule } from './invoice-information/invoice-information.module';
 
 const mongoOptions = {
   user: process.env.MONGO_USER || '',
@@ -19,7 +18,6 @@ const mongoOptions = {
     UsersModule,
     MongooseModule.forRoot(process.env.MONGO_URL, mongoOptions),
     OnboardingTokenModule,
-    InvoiceInformationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
