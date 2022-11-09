@@ -15,6 +15,7 @@ import {
   imports: [
     MongooseModule.forFeature([
       { name: OnboardingToken.name, schema: OnboardingTokenSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
 })
