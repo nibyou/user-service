@@ -13,6 +13,7 @@ import { AuthUser } from '@nibyou/types';
 import { filterInactive } from '../query-helpers/global.query-helpers';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import fetch from 'node-fetch';
+import { User, UserDocument } from '../users/schemata/user.schema';
 
 @Injectable()
 export class OnboardingTokenService {
@@ -20,6 +21,7 @@ export class OnboardingTokenService {
   constructor(
     @InjectModel(OnboardingToken.name)
     private readonly onboardingTokenModel: Model<OnboardingTokenDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {
     this.kcAdminClient = new KcAdminClient({
       baseUrl: process.env.KEYCLOAK_URL,
@@ -35,16 +37,25 @@ export class OnboardingTokenService {
       createOnboardingTokenDto.accountType = AccountType.PATIENT; // ignore account type if not admin
     }
 
-    const onboardingToken = new this.onboardingTokenModel(
-      createOnboardingTokenDto,
-    );
-
     await this.kcAdminClient.auth({
       username: process.env.KEYCLOAK_ADMIN_USER,
       password: process.env.KEYCLOAK_ADMIN_PASS,
       grantType: 'password',
       clientId: process.env.KEYCLOAK_ADMIN_CLIENT,
     });
+
+    if (
+      await this.doesUserExist(
+        createOnboardingTokenDto.email,
+        this.kcAdminClient,
+      )
+    ) {
+      throw new HttpException('User already exists', HttpStatus.CONFLICT);
+    }
+
+    const onboardingToken = new this.onboardingTokenModel(
+      createOnboardingTokenDto,
+    );
 
     const accessToken = await this.kcAdminClient.getAccessToken();
 
@@ -111,5 +122,22 @@ export class OnboardingTokenService {
     if (AuthUser.isAdmin(user)) {
       await this.onboardingTokenModel.findOneAndDelete({ _id: id });
     }
+  }
+
+  protected async doesUserExist(
+    email: string,
+    kcAC: KcAdminClient = this.kcAdminClient,
+  ): Promise<boolean> {
+    const userExistsMongo = await this.userModel.findOne({
+      email: email,
+    });
+    const allUsers = await kcAC.users.find({
+      realm: process.env.KEYCLOAK_REALM,
+      email,
+    });
+
+    const userExistsKeycloak = allUsers.find((u) => u.email === email);
+
+    return !!userExistsMongo || !!userExistsKeycloak;
   }
 }

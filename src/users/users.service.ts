@@ -30,6 +30,7 @@ import {
 import { AccountType } from '../onboarding-token/dto/create-onboarding-token.dto';
 import { RoleMappingPayload } from '@keycloak/keycloak-admin-client/lib/defs/roleRepresentation';
 import fetch from 'node-fetch';
+import KeycloakAdminClient from '@keycloak/keycloak-admin-client';
 
 @Injectable()
 export class UsersService {
@@ -342,9 +343,9 @@ export class UsersService {
     }
   }
 
-  private async doesUserExist(
+  protected async doesUserExist(
     email: string,
-    kcAC: KcAdminClient = this.kcAdminClient,
+    kcAC: KeycloakAdminClient = this.kcAdminClient,
   ): Promise<boolean> {
     const userExistsMongo = await this.userModel.findOne({
       email: email,
