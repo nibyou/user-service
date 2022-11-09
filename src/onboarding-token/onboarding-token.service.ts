@@ -44,12 +44,7 @@ export class OnboardingTokenService {
       clientId: process.env.KEYCLOAK_ADMIN_CLIENT,
     });
 
-    if (
-      await this.doesUserExist(
-        createOnboardingTokenDto.email,
-        this.kcAdminClient,
-      )
-    ) {
+    if (await this.doesUserExist(createOnboardingTokenDto.email)) {
       throw new HttpException('User already exists', HttpStatus.CONFLICT);
     }
 
@@ -124,20 +119,11 @@ export class OnboardingTokenService {
     }
   }
 
-  protected async doesUserExist(
-    email: string,
-    kcAC: KcAdminClient = this.kcAdminClient,
-  ): Promise<boolean> {
+  protected async doesUserExist(email: string): Promise<boolean> {
     const userExistsMongo = await this.userModel.findOne({
       email: email,
     });
-    const allUsers = await kcAC.users.find({
-      realm: process.env.KEYCLOAK_REALM,
-      email,
-    });
 
-    const userExistsKeycloak = allUsers.find((u) => u.email === email);
-
-    return !!userExistsMongo || !!userExistsKeycloak;
+    return !!userExistsMongo;
   }
 }
