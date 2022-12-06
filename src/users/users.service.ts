@@ -454,7 +454,7 @@ export class UsersService {
 
     const practitionerRole = await this.kcAdminClient.roles.findOneByName({
       realm: process.env.KEYCLOAK_REALM,
-      name: RealmRoles.USER_PRACTITIONER.split(':')[1],
+      name: RealmRoles.USER_PRACTITIONER_PENDING.split(':')[1],
     });
 
     if (createUserDto.accountType === AccountType.PRACTITIONER) {

@@ -72,20 +72,6 @@ export class UsersController {
   }
 
   @ReadRequest({
-    path: ':id',
-    summary: 'Find a single user',
-    description: 'The user has been successfully returned.',
-    returnType: User,
-    roles: [RealmRoles.ADMIN],
-  })
-  findOne(
-    @Param('id') id: string,
-    @AuthenticatedUser() user: AuthUser,
-  ): Promise<User> {
-    return this.usersService.findOne(id, user);
-  }
-
-  @ReadRequest({
     path: 'me',
     summary: 'Find a single user',
     description: 'The user has been successfully returned.',
@@ -98,6 +84,20 @@ export class UsersController {
   })
   findMe(@AuthenticatedUser() user: AuthUser): Promise<User> {
     return this.usersService.findMe(user);
+  }
+
+  @ReadRequest({
+    path: ':id',
+    summary: 'Find a single user',
+    description: 'The user has been successfully returned.',
+    returnType: User,
+    roles: [RealmRoles.ADMIN],
+  })
+  findOne(
+    @Param('id') id: string,
+    @AuthenticatedUser() user: AuthUser,
+  ): Promise<User> {
+    return this.usersService.findOne(id, user);
   }
 
   @Patch(':id')
