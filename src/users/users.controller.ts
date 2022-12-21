@@ -91,7 +91,11 @@ export class UsersController {
     summary: 'Find a single user',
     description: 'The user has been successfully returned.',
     returnType: User,
-    roles: [RealmRoles.ADMIN],
+    roles: [
+      RealmRoles.ADMIN,
+      RealmRoles.USER_PRACTITIONER,
+      RealmRoles.USER_PATIENT,
+    ],
   })
   findOne(
     @Param('id') id: string,
