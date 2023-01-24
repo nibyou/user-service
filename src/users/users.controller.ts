@@ -95,6 +95,7 @@ export class UsersController {
       RealmRoles.ADMIN,
       RealmRoles.USER_PRACTITIONER,
       RealmRoles.USER_PATIENT,
+      RealmRoles.BACKEND_SERVICE,
     ],
   })
   findOne(
