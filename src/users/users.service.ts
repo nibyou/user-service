@@ -93,7 +93,10 @@ export class UsersService {
   }
 
   async findOne(id: string, user: AuthUser): Promise<User> {
-    if (AuthUser.isAdmin(user)) {
+    if (
+      AuthUser.isAdmin(user) ||
+      AuthUser.hasRole(user, RealmRoles.BACKEND_SERVICE.split(':')[1])
+    ) {
       return this.userModel.findOne({ _id: id, ...filterDeleted });
     }
   }
