@@ -79,6 +79,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PRACTITIONER,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PATIENT,
     ],
   })
@@ -94,6 +95,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PRACTITIONER,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PATIENT,
       RealmRoles.BACKEND_SERVICE,
     ],
@@ -118,6 +120,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PRACTITIONER,
     ],
   })
@@ -139,6 +142,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PRACTITIONER,
     ],
   })
@@ -160,6 +164,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PRACTITIONER,
     ],
   })
@@ -180,6 +185,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PRACTITIONER,
     ],
   })
@@ -195,6 +201,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PRACTITIONER,
     ],
   })
@@ -216,6 +223,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PRACTITIONER,
     ],
   })
@@ -238,6 +246,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PATIENT,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PRACTITIONER,
     ],
   })
@@ -259,6 +268,7 @@ export class UsersController {
     roles: [
       RealmRoles.ADMIN,
       RealmRoles.USER_PRACTITIONER,
+      RealmRoles.USER_PRACTITIONER_PENDING,
       RealmRoles.USER_PATIENT,
     ],
   })
