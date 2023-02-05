@@ -19,7 +19,7 @@ services:
       - my-net
 
   node:
-    container_name: node
+    container_name: user-service
     build:
       context: .
       dockerfile: Dockerfile
